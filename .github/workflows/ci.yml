@@ -1,0 +1,92 @@
+# Nombre:                 ci.yml
+# Descripción:            Pipeline del backend: compila, verifica encabezados, corre pruebas unitarias y de integración con
+#                         PostgreSQL (Testcontainers), cobertura y mutación; en main empaqueta, despliega y verifica la salud.
+#                         Al final reporta en Taiga: issue y tarea si algo falla, cierre si vuelve a pasar (RF-MON-001 a 004).
+# Fecha de creación:      2026-10-15
+# Fecha de actualización: 2026-10-15
+# Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
+# Versión:                0.12.0
+name: CI backend
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21', cache: maven }
+      - name: Verificar encabezados
+        run: ./scripts/verificar_encabezados.sh
+      - name: Pruebas unitarias, de integración (Testcontainers) y cobertura
+        run: ./mvnw -B -ntp verify
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reportes-pruebas
+          path: |
+            target/surefire-reports
+            target/failsafe-reports
+            target/site/jacoco
+
+  mutacion:
+    if: github.ref == 'refs/heads/main'
+    needs: pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21', cache: maven }
+      - run: ./scripts/mutacion.sh -DthreadCount=4
+      - uses: actions/upload-artifact@v4
+        with: { name: reporte-mutacion, path: target/pit-reports }
+
+  desplegar:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [pruebas, mutacion]
+    runs-on: ubuntu-latest
+    permissions: { contents: read, packages: write }
+    environment: demostracion
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construir y publicar la imagen, desplegar y verificar la salud
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGEN: ghcr.io/${{ github.repository }}:${{ github.sha }}
+          FS_DEPLOY_HOOK: ${{ secrets.FS_DEPLOY_HOOK }}
+          FS_URL_SALUD: ${{ vars.FS_URL_SALUD }}
+        run: ./scripts/despliegue/desplegar.sh
+
+  reportar:
+    if: always() && github.event_name != 'pull_request'
+    needs: [pruebas, mutacion, desplegar]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reportar en Taiga
+        env:
+          TAIGA_USUARIO: ${{ secrets.TAIGA_USUARIO }}
+          TAIGA_CLAVE: ${{ secrets.TAIGA_CLAVE }}
+          TAIGA_PROYECTO_ID: ${{ vars.TAIGA_PROYECTO_ID || '1811096' }}
+          TAIGA_ASIGNADO_POR_DEFECTO: ${{ vars.TAIGA_ASIGNADO_POR_DEFECTO || '905420' }}
+          TAIGA_SIMULAR: ${{ secrets.TAIGA_USUARIO == '' && '1' || '0' }}
+          REPO: ${{ github.event.repository.name }}
+          RAMA: ${{ github.ref_name }}
+          COMMIT: ${{ github.sha }}
+          AUTOR_GITHUB: ${{ github.actor }}
+          URL_LOG: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RESULTADOS: ${{ toJSON(needs) }}
+        run: |
+          FALLIDO=$(jq -r 'to_entries | map(select(.value.result == "failure")) | .[0].key // empty' <<<"$RESULTADOS")
+          if [[ -n "$FALLIDO" ]]; then JOB="$FALLIDO" ./scripts/ci/taiga_reportar.sh fallo
+          else for J in pruebas mutacion desplegar; do JOB="$J" ./scripts/ci/taiga_reportar.sh exito; done; fi

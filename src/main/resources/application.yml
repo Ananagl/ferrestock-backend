@@ -56,6 +56,14 @@ springdoc:
   paths-to-match: /api/**
 
 ferrestock:
+  taiga:                         # reporte de errores recurrentes (RF-MON-006); vacío = desactivado
+    url: ${FS_TAIGA_URL:https://api.taiga.io}
+    usuario: ${TAIGA_USUARIO:}
+    clave: ${TAIGA_CLAVE:}
+    proyecto-id: ${TAIGA_PROYECTO_ID:1811096}
+  monitoreo:
+    umbral-recurrencia: 5
+    ventana-minutos: 10
   negocio:                       # encabezado de los comprobantes (RF-DOC-002)
     nombre: ${FS_NEGOCIO_NOMBRE:Ferretería FerreStock}
     nit: ${FS_NEGOCIO_NIT:900123456-7}
