@@ -4,15 +4,17 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.8.0
+ * Versión:                0.9.0
  */
 package com.ferrestock.ventas.controller;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import com.ferrestock.compartido.documentos.AnulacionRequest;
 import com.ferrestock.compartido.documentos.EstadoDocumento;
 import com.ferrestock.compartido.respuesta.PaginaResponse;
+import com.ferrestock.ventas.dto.respuesta.DevolvibleResponse;
 import com.ferrestock.ventas.dto.respuesta.VentaResponse;
 import com.ferrestock.ventas.dto.solicitud.VentaCrearRequest;
 import com.ferrestock.ventas.servicio.FiltroVentas;
@@ -74,6 +76,16 @@ public class VentaController {
     @Operation(summary = "Detalle de una venta con líneas, pago y consecutivo")
     public VentaResponse obtener(@PathVariable Long id) {
         return servicio.obtener(id);
+    }
+
+    /**
+     * @param id venta
+     * @return por cada línea, cuánto queda por devolver
+     */
+    @GetMapping("/{id}/devolvible")
+    @Operation(summary = "Cantidades que aún se pueden devolver de una venta (RF-DEV-004)")
+    public List<DevolvibleResponse> devolvible(@PathVariable Long id) {
+        return servicio.devolvible(id);
     }
 
     /**
