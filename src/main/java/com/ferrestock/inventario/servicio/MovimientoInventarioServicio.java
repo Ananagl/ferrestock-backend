@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.6.0
+ * Versión:                0.8.0
  */
 package com.ferrestock.inventario.servicio;
 
@@ -114,6 +114,35 @@ public class MovimientoInventarioServicio {
         }
         BigDecimal costo = producto.getCostoPromedio();
         return aplicar(producto, tipo, cantidad, costo, Montos.cantidad(saldo), costo, costo, documentoTipo, documentoId);
+    }
+
+    /**
+     * Salida que revierte una entrada ponderada (anulación de compra): sale al costo con que entró y restaura el CPP
+     * que había antes de esa entrada (03_inventario_y_costos.md, 5.2). El llamador ya comprobó que no hubo entradas
+     * posteriores que cambiaran el CPP.
+     *
+     * @param producto        producto bloqueado
+     * @param cantidad        cantidad que entró
+     * @param costoUnitario   costo con que entró
+     * @param costoRestaurado CPP anterior a la entrada que se revierte
+     * @param tipo            tipo de movimiento de naturaleza SALIDA
+     * @param documentoTipo   documento origen
+     * @param documentoId     id del documento origen
+     * @return movimiento guardado
+     * @throws NegocioException {@code EXISTENCIAS_INSUFICIENTES_PARA_ANULAR}
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public MovimientoInventario revertirEntrada(Producto producto, BigDecimal cantidad, BigDecimal costoUnitario,
+                                                BigDecimal costoRestaurado, TipoMovimiento tipo,
+                                                TipoDocumentoComercial documentoTipo, Long documentoId) {
+        exigirNaturaleza(tipo, Naturaleza.SALIDA);
+        BigDecimal saldo = producto.getExistencias().subtract(cantidad);
+        if (saldo.signum() < 0) {
+            throw new NegocioException(CodigoError.EXISTENCIAS_INSUFICIENTES_PARA_ANULAR, producto.getCodigo(),
+                producto.getExistencias().stripTrailingZeros().toPlainString());
+        }
+        return aplicar(producto, tipo, cantidad, Montos.costo(costoUnitario), Montos.cantidad(saldo),
+            producto.getCostoPromedio(), Montos.costo(costoRestaurado), documentoTipo, documentoId);
     }
 
     private MovimientoInventario aplicar(Producto producto, TipoMovimiento tipo, BigDecimal cantidad,

@@ -4,12 +4,15 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.5.0
+ * Versión:                0.8.0
  */
 package com.ferrestock.terceros.servicio;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Set;
 
@@ -75,6 +78,34 @@ public class TerceroServicio {
     @Transactional(readOnly = true)
     public TerceroResponse obtener(Long id) {
         return TerceroResponse.desde(buscar(id));
+    }
+
+    /**
+     * Tercero para un documento: debe existir, estar activo y tener el rol requerido (RNP-06).
+     *
+     * @param id    tercero
+     * @param rol   CLIENTE (ventas, devoluciones) o PROVEEDOR (compras)
+     * @param campo campo del formulario al que se asocia el error
+     * @return la entidad
+     * @throws NegocioException {@code NO_ENCONTRADO} o {@code TERCERO_INACTIVO} en el campo indicado
+     */
+    @Transactional(readOnly = true)
+    public Tercero exigirParaDocumento(Long id, FiltroTerceros.RolTercero rol, String campo) {
+        Tercero tercero = terceros.findById(id).orElseThrow(() -> NegocioException.enCampo(CodigoError.NO_ENCONTRADO, campo));
+        boolean tieneRol = rol == FiltroTerceros.RolTercero.CLIENTE ? tercero.isEsCliente() : tercero.isEsProveedor();
+        if (!tercero.isActivo() || !tieneRol) {
+            throw NegocioException.enCampo(CodigoError.TERCERO_INACTIVO, campo);
+        }
+        return tercero;
+    }
+
+    /**
+     * @param ids terceros
+     * @return nombres por id, para listados de documentos
+     */
+    @Transactional(readOnly = true)
+    public Map<Long, String> nombresPorId(Collection<Long> ids) {
+        return terceros.findAllById(ids).stream().collect(Collectors.toMap(Tercero::getId, Tercero::getNombre));
     }
 
     /**

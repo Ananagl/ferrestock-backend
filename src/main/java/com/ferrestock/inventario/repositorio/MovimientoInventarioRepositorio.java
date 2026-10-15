@@ -4,17 +4,20 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.6.0
+ * Versión:                0.8.0
  */
 package com.ferrestock.inventario.repositorio;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
+import com.ferrestock.compartido.documentos.TipoDocumentoComercial;
 import com.ferrestock.inventario.entidad.MovimientoInventario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /**
  * Repositorio del kardex (solo inserción y lectura).
@@ -44,6 +47,30 @@ public interface MovimientoInventarioRepositorio
         /** @return costo promedio resultante del último movimiento, o nulo si no hay movimientos */
         BigDecimal getCostoPromedioKardex();
     }
+
+    /**
+     * @param documentoTipo documento origen
+     * @param documentoId   id del documento
+     * @param productoId    producto
+     * @return primer movimiento que generó ese documento para el producto
+     */
+    Optional<MovimientoInventario> findFirstByDocumentoTipoAndDocumentoIdAndProductoIdOrderByIdAsc(
+        TipoDocumentoComercial documentoTipo, Long documentoId, Long productoId);
+
+    /**
+     * Indica si después de un movimiento hubo entradas que cambiaron el CPP del producto: compras, ajustes de
+     * entrada, anulaciones de venta o devoluciones al costo histórico (03_inventario_y_costos.md, 5.2).
+     *
+     * @param productoId producto
+     * @param despuesDe  id del movimiento de referencia
+     * @return verdadero si existe alguna
+     */
+    @Query(nativeQuery = true, value = """
+        SELECT EXISTS (SELECT 1 FROM movimiento_inventario
+                       WHERE producto_id = :productoId AND id > :despuesDe
+                         AND (tipo IN ('COMPRA', 'AJUSTE_ENTRADA', 'ANULACION_VENTA')
+                              OR (tipo = 'DEVOLUCION' AND costo_unitario <> costo_promedio_anterior)))""")
+    boolean hayEntradasPonderadasDespues(@Param("productoId") Long productoId, @Param("despuesDe") Long despuesDe);
 
     /**
      * Productos cuyas existencias o costo no coinciden con el kardex (03_inventario_y_costos.md, sección 8).

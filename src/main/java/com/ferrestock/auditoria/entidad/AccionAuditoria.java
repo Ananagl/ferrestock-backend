@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.7.0
+ * Versión:                0.8.0
  */
 package com.ferrestock.auditoria.entidad;
 
@@ -61,5 +61,17 @@ public enum AccionAuditoria {
     /** Reactivación de un tercero (RF-TER-006). */
     TERCERO_ACTIVADO,
     /** Ajuste de inventario registrado por el Administrador (RF-AJU-001, RN-08). */
-    AJUSTE_REGISTRADO
+    AJUSTE_REGISTRADO,
+    /** Compra registrada y recibida (RF-COM-001). */
+    COMPRA_REGISTRADA,
+    /** Compra anulada por el Administrador (RF-COM-005). */
+    COMPRA_ANULADA,
+    /** Venta y pago confirmados (RF-VEN-001, RF-PAG-003). */
+    VENTA_REGISTRADA,
+    /** Venta anulada por el Administrador (RF-VEN-006). */
+    VENTA_ANULADA,
+    /** Devolución vinculada a una venta (RF-DEV-001). */
+    DEVOLUCION_REGISTRADA,
+    /** Devolución sin venta vinculada, para revisión del Administrador (RF-DEV-004). */
+    DEVOLUCION_SIN_VENTA
 }
