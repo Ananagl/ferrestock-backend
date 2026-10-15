@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.2.0
+ * Versión:                0.3.0
  */
 package com.ferrestock.autenticacion;
 
@@ -70,7 +70,7 @@ class CambioContrasenaTest {
         usuario = Usuario.builder().id(3L).nombreUsuario("maria").nombreCompleto("María").rol(Rol.OPERATIVO)
             .passwordHash(codificador.encode("Temporal123")).debeCambiarPassword(true).build();
         UsuarioAutenticado principal = new UsuarioAutenticado(3L, "maria", "María", "OPERATIVO", null, true, null,
-            true, "es");
+            true, "es", UsuarioAutenticado.sellar(usuario.getPasswordHash()));
         SecurityContextHolder.getContext().setAuthentication(
             UsernamePasswordAuthenticationToken.authenticated(principal, null, principal.getAuthorities()));
         when(usuarios.findById(3L)).thenReturn(Optional.of(usuario));
@@ -107,6 +107,7 @@ class CambioContrasenaTest {
         UsuarioAutenticado enSesion =
             (UsuarioAutenticado) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         assertThat(enSesion.isDebeCambiarPassword()).isFalse();
+        assertThat(enSesion.getSelloCredenciales()).isEqualTo(UsuarioAutenticado.sellar(usuario.getPasswordHash()));
     }
 
     @Test

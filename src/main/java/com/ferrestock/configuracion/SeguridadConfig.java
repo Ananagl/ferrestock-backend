@@ -1,20 +1,21 @@
 /*
  * Nombre:                 SeguridadConfig.java
- * Descripción:            Configuración de Spring Security: sesión de servidor, Recordarme persistente, CSRF con cookie, cierre de sesión, errores JSON y cambio de contraseña obligatorio.
+ * Descripción:            Configuración de Spring Security: sesión de servidor, Recordarme persistente, CSRF con cookie, cierre de sesión, errores JSON y verificación del estado de la cuenta.
  * Fecha de creación:      2026-10-14
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.2.0
+ * Versión:                0.3.0
  */
 package com.ferrestock.configuracion;
 
 import javax.sql.DataSource;
 
-import com.ferrestock.autenticacion.seguridad.CambioContrasenaPendienteFiltro;
+import com.ferrestock.autenticacion.seguridad.EstadoCuentaFiltro;
 import com.ferrestock.autenticacion.seguridad.RecuerdameServicio;
 import com.ferrestock.autenticacion.seguridad.RegistroCierreSesion;
 import com.ferrestock.compartido.error.CodigoError;
 import com.ferrestock.compartido.error.EscritorProblemas;
+import com.ferrestock.usuarios.repositorio.UsuarioRepositorio;
 import org.springframework.boot.web.servlet.server.CookieSameSiteSupplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -63,13 +64,15 @@ public class SeguridadConfig {
      * @param contexto       repositorio del contexto de seguridad en la sesión HTTP
      * @param registroCierre manejador que audita el cierre de sesión
      * @param escritor       generador de respuestas de error JSON
+     * @param usuarios       repositorio usado para verificar el estado de la cuenta en cada petición
      * @return la cadena de filtros configurada
      * @throws Exception si la configuración no es válida
      */
     @Bean
     public SecurityFilterChain cadenaFiltros(HttpSecurity http, PropiedadesSeguridad propiedades,
                                              RecuerdameServicio recuerdame, SecurityContextRepository contexto,
-                                             RegistroCierreSesion registroCierre, EscritorProblemas escritor)
+                                             RegistroCierreSesion registroCierre, EscritorProblemas escritor,
+                                             UsuarioRepositorio usuarios)
             throws Exception {
         http
             // CSRF con cookie legible por la SPA (XSRF-TOKEN -> cabecera X-XSRF-TOKEN), incluido el login
@@ -98,7 +101,7 @@ public class SeguridadConfig {
             .exceptionHandling(e -> e
                 .authenticationEntryPoint((pet, resp, ex) -> escritor.escribir(pet, resp, CodigoError.NO_AUTENTICADO))
                 .accessDeniedHandler((pet, resp, ex) -> escritor.escribir(pet, resp, CodigoError.ACCESO_DENEGADO)))
-            .addFilterAfter(new CambioContrasenaPendienteFiltro(escritor), AuthorizationFilter.class)
+            .addFilterAfter(new EstadoCuentaFiltro(usuarios, escritor), AuthorizationFilter.class)
             .headers(cabeceras -> cabeceras
                 .frameOptions(f -> f.deny())
                 .referrerPolicy(r -> r.policy(ReferrerPolicy.SAME_ORIGIN)));

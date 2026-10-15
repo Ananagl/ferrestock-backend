@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.2.0
+ * Versión:                0.3.0
  */
 package com.ferrestock.auditoria.entidad;
 
@@ -23,5 +23,17 @@ public enum AccionAuditoria {
     /** Cambio de contraseña propio. */
     CONTRASENA_CAMBIADA,
     /** Intento de usar un endpoint sin el rol requerido. */
-    ACCESO_DENEGADO
+    ACCESO_DENEGADO,
+    /** Alta de un usuario (RF-AUT-006). */
+    USUARIO_CREADO,
+    /** Cambio del nombre completo de un usuario. */
+    USUARIO_ACTUALIZADO,
+    /** Cambio del rol de un usuario. */
+    ROL_CAMBIADO,
+    /** Desactivación de un usuario. */
+    USUARIO_DESACTIVADO,
+    /** Reactivación de un usuario. */
+    USUARIO_ACTIVADO,
+    /** Contraseña temporal asignada por el administrador. */
+    CONTRASENA_RESTABLECIDA
 }

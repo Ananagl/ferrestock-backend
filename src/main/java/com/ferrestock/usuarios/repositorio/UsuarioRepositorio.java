@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.2.0
+ * Versión:                0.3.0
  */
 package com.ferrestock.usuarios.repositorio;
 
@@ -12,11 +12,12 @@ import java.util.Optional;
 
 import com.ferrestock.usuarios.entidad.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 /**
  * Repositorio Spring Data de {@link Usuario}.
  */
-public interface UsuarioRepositorio extends JpaRepository<Usuario, Long> {
+public interface UsuarioRepositorio extends JpaRepository<Usuario, Long>, JpaSpecificationExecutor<Usuario> {
 
     /**
      * Busca un usuario por nombre sin distinguir mayúsculas (coincide con el índice único sobre lower()).

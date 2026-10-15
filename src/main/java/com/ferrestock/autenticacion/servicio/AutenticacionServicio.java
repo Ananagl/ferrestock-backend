@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.2.0
+ * Versión:                0.3.0
  */
 package com.ferrestock.autenticacion.servicio;
 
@@ -177,7 +177,8 @@ public class AutenticacionServicio {
     /** Reemplaza el principal de la sesión para reflejar cambios sin obligar a ingresar de nuevo. */
     private void actualizarPrincipal(Usuario usuario, HttpServletRequest peticion, HttpServletResponse respuesta) {
         UsuarioAutenticado actual = UsuarioActual.obtener().orElseThrow();
-        UsuarioAutenticado nuevo = actual.con(usuario.isDebeCambiarPassword(), usuario.getIdioma());
+        UsuarioAutenticado nuevo = actual.con(usuario.isDebeCambiarPassword(), usuario.getIdioma(),
+            UsuarioAutenticado.sellar(usuario.getPasswordHash()));
         guardarEnSesion(UsernamePasswordAuthenticationToken.authenticated(nuevo, null, nuevo.getAuthorities()),
             peticion, respuesta);
     }

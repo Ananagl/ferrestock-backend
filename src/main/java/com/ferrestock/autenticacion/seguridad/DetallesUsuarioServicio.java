@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.2.0
+ * Versión:                0.3.0
  */
 package com.ferrestock.autenticacion.seguridad;
 
@@ -46,6 +46,7 @@ public class DetallesUsuarioServicio implements UserDetailsService {
     public static UsuarioAutenticado aPrincipal(Usuario usuario) {
         return new UsuarioAutenticado(usuario.getId(), usuario.getNombreUsuario(), usuario.getNombreCompleto(),
             usuario.getRol().name(), usuario.getPasswordHash(), usuario.isActivo(), usuario.getBloqueadoHasta(),
-            usuario.isDebeCambiarPassword(), usuario.getIdioma());
+            usuario.isDebeCambiarPassword(), usuario.getIdioma(),
+            UsuarioAutenticado.sellar(usuario.getPasswordHash()));
     }
 }
