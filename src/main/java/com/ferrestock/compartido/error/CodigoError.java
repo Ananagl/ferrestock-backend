@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.7.0
+ * Versión:                0.8.0
  */
 package com.ferrestock.compartido.error;
 
@@ -61,6 +61,24 @@ public enum CodigoError {
     CANTIDAD_FRACCIONARIA_NO_PERMITIDA(HttpStatus.BAD_REQUEST),
     /** Un ajuste de entrada (o inventario inicial) sin costo unitario (RF-AJU-001). */
     COSTO_UNITARIO_REQUERIDO(HttpStatus.BAD_REQUEST),
+    /** Un mismo producto aparece en dos líneas del documento (DP-19). */
+    PRODUCTO_REPETIDO(HttpStatus.BAD_REQUEST),
+    /** El documento ya está anulado (DP-07). */
+    DOCUMENTO_ANULADO(HttpStatus.CONFLICT),
+    /** Las existencias actuales no alcanzan para retirar lo que entró con la compra (03_inventario_y_costos.md, 5.2). */
+    EXISTENCIAS_INSUFICIENTES_PARA_ANULAR(HttpStatus.CONFLICT),
+    /** Después de la compra hubo entradas que cambiaron el CPP; anularla no tiene una reversión exacta (5.2). */
+    COMPRA_CON_MOVIMIENTOS_POSTERIORES(HttpStatus.CONFLICT),
+    /** El valor recibido es menor que el total de la venta (RF-PAG-002). */
+    PAGO_INSUFICIENTE(HttpStatus.BAD_REQUEST),
+    /** Medio de pago distinto a EFECTIVO (RF-PAG-002). */
+    MEDIO_PAGO_NO_PERMITIDO(HttpStatus.BAD_REQUEST),
+    /** La venta tiene devoluciones y no se puede anular (DP-20). */
+    VENTA_CON_DEVOLUCIONES(HttpStatus.CONFLICT),
+    /** La venta indicada no es del cliente, está anulada o no incluye el producto (03_inventario_y_costos.md, 6). */
+    VENTA_NO_CORRESPONDE(HttpStatus.BAD_REQUEST),
+    /** La cantidad devuelta acumulada supera la vendida (RNP-04, CA-DEV-03). */
+    DEVOLUCION_EXCEDE_VENDIDO(HttpStatus.CONFLICT),
     /** El tercero debe ser cliente, proveedor o ambos. */
     ROL_TERCERO_REQUERIDO(HttpStatus.BAD_REQUEST),
     /** Una persona jurídica solo se identifica con NIT. */
