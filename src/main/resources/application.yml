@@ -56,6 +56,10 @@ springdoc:
   paths-to-match: /api/**
 
 ferrestock:
+  negocio:                       # encabezado de los comprobantes (RF-DOC-002)
+    nombre: ${FS_NEGOCIO_NOMBRE:Ferretería FerreStock}
+    nit: ${FS_NEGOCIO_NIT:900123456-7}
+    direccion: ${FS_NEGOCIO_DIRECCION:Calle 10 # 20-30, Bogotá}
   seguridad:
     swagger-publico: false
     intentos-maximos: 5          # RF-AUT-008 (propuesta aprobada)
