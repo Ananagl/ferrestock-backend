@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-14
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.4.0
+ * Versión:                0.13.0
  */
 package com.ferrestock.compartido.error;
 
@@ -18,6 +18,7 @@ import com.ferrestock.auditoria.entidad.AccionAuditoria;
 import com.ferrestock.auditoria.servicio.AuditoriaServicio;
 import com.ferrestock.compartido.seguridad.UsuarioActual;
 import com.ferrestock.compartido.seguridad.UsuarioAutenticado;
+import com.ferrestock.monitoreo.servicio.RegistroErrorServicio;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,7 @@ public class ManejadorGlobalErrores {
 
     private final EscritorProblemas escritor;
     private final AuditoriaServicio auditoria;
+    private final RegistroErrorServicio registroErrores;
 
     /**
      * Regla de negocio incumplida: estado y mensaje según el {@link CodigoError}; si hay campo, se agrega a
@@ -149,17 +151,24 @@ public class ManejadorGlobalErrores {
      * Cualquier error no previsto: 500 con un identificador de correlación y sin detalles internos.
      * Las excepciones HTTP propias de Spring (404, 405, 415...) conservan su código original.
      *
-     * @param ex     excepción no controlada
-     * @param idioma idioma de la petición
+     * @param ex       excepción no controlada
+     * @param idioma   idioma de la petición
+     * @param peticion petición, para registrar la ruta (RF-MON-006)
      * @return problema con código {@code ERROR_INTERNO}, o el de la excepción HTTP de Spring
      */
     @ExceptionHandler(Exception.class)
-    public ProblemDetail inesperado(Exception ex, Locale idioma) {
+    public ProblemDetail inesperado(Exception ex, Locale idioma, HttpServletRequest peticion) {
         if (ex instanceof ErrorResponse respuestaHttp) {
             return respuestaHttp.getBody();
         }
         UUID correlacion = UUID.randomUUID();
         log.error("Error no controlado [correlacion={}]", correlacion, ex);
+        try {
+            registroErrores.registrar(correlacion, peticion.getMethod(), peticion.getRequestURI(), ex,
+                UsuarioActual.obtener().map(UsuarioAutenticado::getId).orElse(null));
+        } catch (RuntimeException e) {
+            log.warn("No fue posible guardar el error [correlacion={}]: {}", correlacion, e.getMessage());
+        }
         ProblemDetail problema = escritor.crear(CodigoError.ERROR_INTERNO, idioma);
         problema.setProperty("correlacion", correlacion.toString());
         return problema;
