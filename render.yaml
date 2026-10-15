@@ -1,0 +1,51 @@
+# Nombre:                 render.yaml
+# Descripción:            Blueprint de Render (plan gratuito) con el backend y el frontend en Docker. La base PostgreSQL está en
+#                         Neon (gratis, sin vencimiento). El despliegue lo dispara el pipeline cuando todas las pruebas pasan.
+# Fecha de creación:      2026-10-15
+# Fecha de actualización: 2026-10-15
+# Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
+# Versión:                0.13.0
+services:
+  - type: web
+    name: ferrestock-backend
+    runtime: docker
+    plan: free
+    region: oregon
+    repo: https://github.com/Ananagl/ferrestock-backend
+    branch: main
+    autoDeploy: false            # despliega el pipeline (RF-MON-002), no cada push
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: FS_DB_URL               # jdbc:postgresql://<host-neon>/<base>?sslmode=require
+        sync: false
+      - key: FS_DB_USUARIO
+        sync: false
+      - key: FS_DB_CLAVE
+        sync: false
+      - key: FS_RECUERDAME_CLAVE
+        generateValue: true
+      - key: TAIGA_USUARIO
+        sync: false
+      - key: TAIGA_CLAVE
+        sync: false
+      - key: TAIGA_PROYECTO_ID
+        value: "1811096"
+  - type: web
+    name: ferrestock-frontend
+    runtime: docker
+    plan: free
+    region: oregon
+    repo: https://github.com/Ananagl/ferrestock-frontend
+    branch: main
+    autoDeploy: false
+    healthCheckPath: /
+    envVars:
+      - key: BACKEND_ESQUEMA
+        value: https
+      - key: BACKEND_HOST
+        fromService:
+          type: web
+          name: ferrestock-backend
+          property: host
