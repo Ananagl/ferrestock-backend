@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.4.0
+ * Versión:                0.5.0
  */
 package com.ferrestock.auditoria.entidad;
 
@@ -51,5 +51,13 @@ public enum AccionAuditoria {
     /** Reactivación de producto (RF-PRO-007). */
     PRODUCTO_ACTIVADO,
     /** Cambio de precio de venta (RF-PRE-002, RN-09). */
-    PRECIO_MODIFICADO
+    PRECIO_MODIFICADO,
+    /** Alta de cliente o proveedor (RF-TER-001). */
+    TERCERO_CREADO,
+    /** Cambio de datos de un tercero (RF-TER-005). */
+    TERCERO_ACTUALIZADO,
+    /** Desactivación de un tercero (RF-TER-006). */
+    TERCERO_DESACTIVADO,
+    /** Reactivación de un tercero (RF-TER-006). */
+    TERCERO_ACTIVADO
 }
