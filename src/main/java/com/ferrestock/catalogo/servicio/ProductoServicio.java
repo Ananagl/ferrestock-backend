@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.6.0
+ * Versión:                0.7.0
  */
 package com.ferrestock.catalogo.servicio;
 
@@ -243,6 +243,17 @@ public class ProductoServicio {
     @Transactional(readOnly = true)
     public List<ProductoRepositorio.ValorPorCategoria> valorizarPorCategoria() {
         return productos.valorizarPorCategoria();
+    }
+
+    /**
+     * Productos por id, para mostrar su código y nombre en documentos e historiales.
+     *
+     * @param ids productos
+     * @return productos encontrados por id (los inexistentes se omiten)
+     */
+    @Transactional(readOnly = true)
+    public Map<Long, Producto> porIds(Collection<Long> ids) {
+        return productos.findAllById(ids).stream().collect(Collectors.toMap(Producto::getId, Function.identity()));
     }
 
     /**
