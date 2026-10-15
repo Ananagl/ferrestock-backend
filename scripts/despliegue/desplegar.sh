@@ -5,12 +5,13 @@
 # Fecha de creación:      2026-10-15
 # Fecha de actualización: 2026-10-15
 # Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
-# Versión:                0.12.0
+# Versión:                0.13.0
 #
 # Variables: IMAGEN (ghcr.io/usuario/repo:sha), GHCR_TOKEN; opcionales FS_DEPLOY_HOOK y FS_URL_SALUD.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 : "${IMAGEN:?}"
+IMAGEN="$(tr '[:upper:]' '[:lower:]' <<<"$IMAGEN")"   # GHCR exige minúsculas (Ananagl → ananagl)
 docker build -t "$IMAGEN" .
 if [[ -n "${GHCR_TOKEN:-}" ]]; then
   echo "$GHCR_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR:-ci}" --password-stdin
