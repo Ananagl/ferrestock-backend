@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.4.0
+ * Versión:                0.5.0
  */
 package com.ferrestock.compartido.error;
 
@@ -51,6 +51,14 @@ public enum CodigoError {
     CATEGORIA_INACTIVA(HttpStatus.CONFLICT),
     /** El producto está inactivo y no admite nuevas operaciones (RF-PRO-008). */
     PRODUCTO_INACTIVO(HttpStatus.CONFLICT),
+    /** El tercero está inactivo o no tiene el rol requerido para la operación (RNP-06). */
+    TERCERO_INACTIVO(HttpStatus.CONFLICT),
+    /** El tercero debe ser cliente, proveedor o ambos. */
+    ROL_TERCERO_REQUERIDO(HttpStatus.BAD_REQUEST),
+    /** Una persona jurídica solo se identifica con NIT. */
+    PERSONA_DOCUMENTO_INCOMPATIBLE(HttpStatus.BAD_REQUEST),
+    /** El dígito de verificación no corresponde al NIT (algoritmo módulo 11 de la DIAN). */
+    DIGITO_VERIFICACION_INVALIDO(HttpStatus.BAD_REQUEST),
     /** Error inesperado del servidor. */
     ERROR_INTERNO(HttpStatus.INTERNAL_SERVER_ERROR);
 
