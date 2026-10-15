@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.5.0
+ * Versión:                0.7.0
  */
 package com.ferrestock.auditoria.entidad;
 
@@ -59,5 +59,7 @@ public enum AccionAuditoria {
     /** Desactivación de un tercero (RF-TER-006). */
     TERCERO_DESACTIVADO,
     /** Reactivación de un tercero (RF-TER-006). */
-    TERCERO_ACTIVADO
+    TERCERO_ACTIVADO,
+    /** Ajuste de inventario registrado por el Administrador (RF-AJU-001, RN-08). */
+    AJUSTE_REGISTRADO
 }
