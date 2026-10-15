@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.3.0
+ * Versión:                0.4.0
  */
 package com.ferrestock.compartido.error;
 
@@ -45,6 +45,12 @@ public enum CodigoError {
     DUPLICADO(HttpStatus.CONFLICT),
     /** Un administrador no puede desactivarse, cambiarse el rol ni restablecerse la contraseña a sí mismo. */
     OPERACION_SOBRE_SI_MISMO(HttpStatus.CONFLICT),
+    /** Otro usuario modificó el registro después de que se cargó (bloqueo optimista). */
+    VERSION_DESACTUALIZADA(HttpStatus.CONFLICT),
+    /** La categoría está inactiva y no se puede asignar. */
+    CATEGORIA_INACTIVA(HttpStatus.CONFLICT),
+    /** El producto está inactivo y no admite nuevas operaciones (RF-PRO-008). */
+    PRODUCTO_INACTIVO(HttpStatus.CONFLICT),
     /** Error inesperado del servidor. */
     ERROR_INTERNO(HttpStatus.INTERNAL_SERVER_ERROR);
 

@@ -4,10 +4,11 @@
  * Fecha de creación:      2026-10-14
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.2.0
+ * Versión:                0.4.0
  */
 package com.ferrestock.compartido.error;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -20,9 +21,12 @@ import com.ferrestock.compartido.seguridad.UsuarioAutenticado;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ProblemDetail;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -68,12 +72,22 @@ public class ManejadorGlobalErrores {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail validacion(MethodArgumentNotValidException ex, Locale idioma) {
         ProblemDetail problema = escritor.crear(CodigoError.VALIDACION, idioma);
-        List<Map<String, String>> errores = ex.getBindingResult().getFieldErrors().stream()
+        // Un solo error por campo; si el campo está vacío, prevalece "obligatorio" sobre las demás reglas
+        Map<String, FieldError> porCampo = new LinkedHashMap<>();
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+            porCampo.merge(error.getField(), error, (actual, nuevo) -> esObligatoriedad(nuevo) ? nuevo : actual);
+        }
+        List<Map<String, String>> errores = porCampo.values().stream()
             .map(e -> Map.of("campo", e.getField(),
                 "mensaje", e.getDefaultMessage() == null ? "" : e.getDefaultMessage()))
             .toList();
         problema.setProperty("errores", errores);
         return problema;
+    }
+
+    private static boolean esObligatoriedad(FieldError error) {
+        return "NotBlank".equals(error.getCode()) || "NotNull".equals(error.getCode())
+            || "NotEmpty".equals(error.getCode());
     }
 
     /**
@@ -86,6 +100,32 @@ public class ManejadorGlobalErrores {
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
     public ProblemDetail entradaIlegible(Exception ex, Locale idioma) {
         return escritor.crear(CodigoError.VALIDACION, idioma);
+    }
+
+    /**
+     * Dos usuarios modificaron el mismo registro a la vez: 409 para que el cliente recargue.
+     *
+     * @param ex     excepción de bloqueo optimista
+     * @param idioma idioma de la petición
+     * @return problema con código {@code VERSION_DESACTUALIZADA}
+     */
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ProblemDetail versionDesactualizada(ObjectOptimisticLockingFailureException ex, Locale idioma) {
+        return escritor.crear(CodigoError.VERSION_DESACTUALIZADA, idioma);
+    }
+
+    /**
+     * Una restricción UNIQUE de la base rechazó el dato (por ejemplo, dos altas simultáneas con el mismo código,
+     * que pasan la validación previa del servicio): 409 sin exponer el detalle SQL.
+     *
+     * @param ex     excepción de integridad
+     * @param idioma idioma de la petición
+     * @return problema con código {@code DUPLICADO}
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail integridad(DataIntegrityViolationException ex, Locale idioma) {
+        log.warn("Restricción de integridad rechazada: {}", ex.getMostSpecificCause().getMessage());
+        return escritor.crear(CodigoError.DUPLICADO, idioma);
     }
 
     /**
