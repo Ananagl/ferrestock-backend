@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.8.0
+ * Versión:                0.9.0
  */
 package com.ferrestock.ventas.servicio;
 
@@ -12,10 +12,12 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.ferrestock.auditoria.entidad.AccionAuditoria;
 import com.ferrestock.auditoria.servicio.AuditoriaServicio;
@@ -38,6 +40,7 @@ import com.ferrestock.terceros.entidad.Tercero;
 import com.ferrestock.terceros.servicio.FiltroTerceros;
 import com.ferrestock.terceros.servicio.TerceroServicio;
 import com.ferrestock.usuarios.servicio.UsuarioServicio;
+import com.ferrestock.ventas.dto.respuesta.DevolvibleResponse;
 import com.ferrestock.ventas.dto.respuesta.VentaResponse;
 import com.ferrestock.ventas.dto.solicitud.VentaCrearRequest;
 import com.ferrestock.ventas.entidad.Venta;
@@ -199,6 +202,36 @@ public class VentaServicio {
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
     public Venta bloquearParaDevolucion(Long id) {
         return ventas.bloquear(id).orElseThrow(() -> NegocioException.enCampo(CodigoError.NO_ENCONTRADO, "ventaId"));
+    }
+
+    /**
+     * Cuánto queda por devolver de cada línea de una venta registrada (ayuda al formulario de devoluciones).
+     *
+     * @param id venta
+     * @return líneas con lo vendido, lo devuelto y lo disponible
+     * @throws NegocioException {@code NO_ENCONTRADO} o {@code VENTA_NO_CORRESPONDE} si está anulada
+     */
+    @Transactional(readOnly = true)
+    public List<DevolvibleResponse> devolvible(Long id) {
+        Venta venta = ventas.conLineas(id).orElseThrow(() -> new NegocioException(CodigoError.NO_ENCONTRADO));
+        if (venta.getEstado() == EstadoDocumento.ANULADA) {
+            throw new NegocioException(CodigoError.VENTA_NO_CORRESPONDE);
+        }
+        Map<Long, Producto> porId = productos.porIds(venta.getLineas().stream().map(VentaLinea::getProductoId).toList());
+        return venta.getLineas().stream().map(l -> {
+            Producto p = porId.get(l.getProductoId());
+            return new DevolvibleResponse(l.getId(), l.getProductoId(), p.getCodigo(), p.getNombre(), p.isPermiteFraccion(),
+                l.getCantidad(), l.getCantidadDevuelta(), Montos.cantidad(l.getCantidad().subtract(l.getCantidadDevuelta())));
+        }).toList();
+    }
+
+    /**
+     * @param ids ventas
+     * @return consecutivos por id, para mostrar la venta de origen de una devolución
+     */
+    @Transactional(readOnly = true)
+    public Map<Long, String> consecutivosPorId(Collection<Long> ids) {
+        return ventas.findAllById(ids).stream().collect(Collectors.toMap(Venta::getId, Venta::getConsecutivo));
     }
 
     private VentaResponse respuesta(Venta venta) {
