@@ -106,9 +106,9 @@ public class CategoriaServicio {
     @Transactional(readOnly = true)
     public Categoria activaParaAsignar(Long id) {
         Categoria categoria = categorias.findById(id)
-            .orElseThrow(() -> new NegocioException(CodigoError.NO_ENCONTRADO, "categoriaId"));
+            .orElseThrow(() -> NegocioException.enCampo(CodigoError.NO_ENCONTRADO, "categoriaId"));
         if (!categoria.isActiva()) {
-            throw new NegocioException(CodigoError.CATEGORIA_INACTIVA, "categoriaId");
+            throw NegocioException.enCampo(CodigoError.CATEGORIA_INACTIVA, "categoriaId");
         }
         return categoria;
     }
@@ -121,7 +121,7 @@ public class CategoriaServicio {
         categorias.findByNombreIgnoreCase(nombre)
             .filter(existente -> !existente.getId().equals(idPropio))
             .ifPresent(existente -> {
-                throw new NegocioException(CodigoError.DUPLICADO, "nombre");
+                throw NegocioException.enCampo(CodigoError.DUPLICADO, "nombre");
             });
     }
 

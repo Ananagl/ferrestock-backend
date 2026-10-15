@@ -135,16 +135,16 @@ public class AutenticacionServicio {
                                   HttpServletResponse respuesta) {
         Usuario usuario = usuarioEnBase();
         if (!codificador.matches(solicitud.actual(), usuario.getPasswordHash())) {
-            throw new NegocioException(CodigoError.CONTRASENA_ACTUAL_INCORRECTA, "actual");
+            throw NegocioException.enCampo(CodigoError.CONTRASENA_ACTUAL_INCORRECTA, "actual");
         }
         if (!solicitud.nueva().equals(solicitud.confirmacion())) {
-            throw new NegocioException(CodigoError.CONTRASENA_NO_COINCIDE, "confirmacion");
+            throw NegocioException.enCampo(CodigoError.CONTRASENA_NO_COINCIDE, "confirmacion");
         }
         if (codificador.matches(solicitud.nueva(), usuario.getPasswordHash())) {
-            throw new NegocioException(CodigoError.CONTRASENA_REPETIDA, "nueva");
+            throw NegocioException.enCampo(CodigoError.CONTRASENA_REPETIDA, "nueva");
         }
         if (solicitud.nueva().toLowerCase(Locale.ROOT).contains(usuario.getNombreUsuario().toLowerCase(Locale.ROOT))) {
-            throw new NegocioException(CodigoError.CONTRASENA_CONTIENE_USUARIO, "nueva");
+            throw NegocioException.enCampo(CodigoError.CONTRASENA_CONTIENE_USUARIO, "nueva");
         }
         usuario.setPasswordHash(codificador.encode(solicitud.nueva()));
         usuario.setDebeCambiarPassword(false);

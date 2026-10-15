@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.2.0
+ * Versión:                0.6.0
  */
 package com.ferrestock.compartido.error;
 
@@ -39,13 +39,19 @@ public class NegocioException extends RuntimeException {
     }
 
     /**
-     * Crea una excepción asociada a un campo del formulario.
+     * Crea una excepción asociada a un campo del formulario. Es una fábrica (y no un constructor público) para que
+     * un argumento de texto del mensaje nunca se confunda con el nombre del campo.
      *
      * @param codigo     código del error
      * @param campo      nombre del campo en el DTO de entrada
      * @param argumentos argumentos del mensaje
+     * @return la excepción
      */
-    public NegocioException(CodigoError codigo, String campo, Object... argumentos) {
+    public static NegocioException enCampo(CodigoError codigo, String campo, Object... argumentos) {
+        return new NegocioException(codigo, campo, argumentos);
+    }
+
+    private NegocioException(CodigoError codigo, String campo, Object[] argumentos) {
         super(codigo.name());
         this.codigo = codigo;
         this.campo = campo;

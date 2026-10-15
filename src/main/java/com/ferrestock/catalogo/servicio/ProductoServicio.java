@@ -4,13 +4,18 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.4.0
+ * Versión:                0.6.0
  */
 package com.ferrestock.catalogo.servicio;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -32,9 +37,12 @@ import com.ferrestock.compartido.seguridad.UsuarioActual;
 import com.ferrestock.compartido.seguridad.UsuarioAutenticado;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -91,7 +99,7 @@ public class ProductoServicio {
     public ProductoResponse crear(ProductoCrearRequest solicitud) {
         String codigo = solicitud.codigo().trim().toUpperCase(Locale.ROOT);
         if (productos.findByCodigoIgnoreCase(codigo).isPresent()) {
-            throw new NegocioException(CodigoError.DUPLICADO, "codigo");
+            throw NegocioException.enCampo(CodigoError.DUPLICADO, "codigo");
         }
         Long actor = actorId();
         Producto producto = productos.saveAndFlush(Producto.builder()
@@ -191,6 +199,60 @@ public class ProductoServicio {
         BigDecimal valor = producto.getExistencias().multiply(producto.getCostoPromedio())
             .setScale(2, RoundingMode.HALF_UP);
         return new CostoProductoResponse(producto.getId(), producto.getCostoPromedio(), producto.getExistencias(), valor);
+    }
+
+    /**
+     * Bloquea productos para una operación de inventario. Debe llamarse dentro de la transacción de la operación
+     * (compra, venta, devolución, ajuste); el bloqueo dura hasta que esa transacción termina.
+     *
+     * @param ids productos de la operación (sin repetir)
+     * @return productos bloqueados por id
+     * @throws NegocioException {@code NO_ENCONTRADO} si alguno no existe
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Map<Long, Producto> bloquearParaMovimiento(Collection<Long> ids) {
+        LinkedHashSet<Long> unicos = new LinkedHashSet<>(ids);
+        Map<Long, Producto> bloqueados = productos.bloquearPorIds(unicos).stream()
+            .collect(Collectors.toMap(Producto::getId, Function.identity()));
+        if (bloqueados.size() != unicos.size()) {
+            throw new NegocioException(CodigoError.NO_ENCONTRADO);
+        }
+        return bloqueados;
+    }
+
+    /**
+     * Productos para la consulta de existencias del módulo de inventario (RF-INV-001).
+     *
+     * @param filtro             filtros del catálogo
+     * @param soloConExistencias si solo se incluyen productos con existencias mayores que cero
+     * @param solicitud          página y orden
+     * @return página de entidades con su categoría
+     */
+    @Transactional(readOnly = true)
+    public Page<Producto> buscarParaInventario(FiltroProductos filtro, boolean soloConExistencias, PageRequest solicitud) {
+        Specification<Producto> especificacion = especificacion(filtro);
+        if (soloConExistencias) {
+            especificacion = especificacion.and((raiz, consulta, cb) -> cb.greaterThan(raiz.get("existencias"), BigDecimal.ZERO));
+        }
+        return productos.findAll(especificacion, solicitud);
+    }
+
+    /**
+     * @return valor del inventario por categoría
+     */
+    @Transactional(readOnly = true)
+    public List<ProductoRepositorio.ValorPorCategoria> valorizarPorCategoria() {
+        return productos.valorizarPorCategoria();
+    }
+
+    /**
+     * @param id producto
+     * @return la entidad
+     * @throws NegocioException {@code NO_ENCONTRADO}
+     */
+    @Transactional(readOnly = true)
+    public Producto entidad(Long id) {
+        return buscar(id);
     }
 
     private Producto buscar(Long id) {

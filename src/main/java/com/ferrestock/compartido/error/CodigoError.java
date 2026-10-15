@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.5.0
+ * Versión:                0.6.0
  */
 package com.ferrestock.compartido.error;
 
@@ -53,6 +53,12 @@ public enum CodigoError {
     PRODUCTO_INACTIVO(HttpStatus.CONFLICT),
     /** El tercero está inactivo o no tiene el rol requerido para la operación (RNP-06). */
     TERCERO_INACTIVO(HttpStatus.CONFLICT),
+    /** La salida supera las existencias disponibles (RN-01). */
+    EXISTENCIAS_INSUFICIENTES(HttpStatus.CONFLICT),
+    /** Cantidad no positiva o con más de 3 decimales. */
+    CANTIDAD_INVALIDA(HttpStatus.BAD_REQUEST),
+    /** Cantidad con decimales en un producto que no se vende en fracciones (CA-PRO-09). */
+    CANTIDAD_FRACCIONARIA_NO_PERMITIDA(HttpStatus.BAD_REQUEST),
     /** El tercero debe ser cliente, proveedor o ambos. */
     ROL_TERCERO_REQUERIDO(HttpStatus.BAD_REQUEST),
     /** Una persona jurídica solo se identifica con NIT. */

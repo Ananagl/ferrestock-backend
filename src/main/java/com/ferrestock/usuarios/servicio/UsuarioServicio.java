@@ -4,12 +4,14 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.3.0
+ * Versión:                0.6.0
  */
 package com.ferrestock.usuarios.servicio;
 
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -98,7 +100,7 @@ public class UsuarioServicio {
     public UsuarioResponse crear(UsuarioCrearRequest solicitud) {
         String nombre = solicitud.nombreUsuario().trim().toLowerCase(Locale.ROOT);
         if (usuarios.findByNombreUsuarioIgnoreCase(nombre).isPresent()) {
-            throw new NegocioException(CodigoError.DUPLICADO, "nombreUsuario");
+            throw NegocioException.enCampo(CodigoError.DUPLICADO, "nombreUsuario");
         }
         Long actor = actor().getId();
         Usuario usuario = usuarios.save(Usuario.builder()
@@ -193,6 +195,18 @@ public class UsuarioServicio {
         tokensRecuerdame.removeUserTokens(usuario.getNombreUsuario());
         auditoria.registrar(AccionAuditoria.CONTRASENA_RESTABLECIDA,
             "Contraseña temporal asignada a " + usuario.getNombreUsuario());
+    }
+
+    /**
+     * Nombres de usuario por id, para mostrar quién hizo cada operación (por ejemplo, en el kardex).
+     *
+     * @param ids ids de usuario
+     * @return mapa id → nombre de usuario
+     */
+    @Transactional(readOnly = true)
+    public Map<Long, String> nombresPorId(Collection<Long> ids) {
+        return usuarios.findAllById(ids).stream()
+            .collect(java.util.stream.Collectors.toMap(Usuario::getId, Usuario::getNombreUsuario));
     }
 
     private Usuario buscar(Long id) {
