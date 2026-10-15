@@ -1,9 +1,9 @@
 # Nombre:                 application-dev.yml
 # Descripción:            Perfil de desarrollo: PostgreSQL local, Swagger público y logs detallados.
 # Fecha de creación:      2026-10-14
-# Fecha de actualización: 2026-10-14
+# Fecha de actualización: 2026-10-15
 # Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
-# Versión:                0.1.0
+# Versión:                0.2.0
 
 spring:
   datasource:
@@ -14,6 +14,7 @@ spring:
 ferrestock:
   seguridad:
     swagger-publico: true
+    recuerdame-clave: ${FS_RECUERDAME_CLAVE:clave-solo-para-desarrollo-local}
 
 logging:
   level:
