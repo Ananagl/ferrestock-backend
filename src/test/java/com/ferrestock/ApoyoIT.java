@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.3.0
+ * Versión:                0.8.0
  */
 package com.ferrestock;
 
@@ -12,7 +12,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.math.BigDecimal;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -25,6 +27,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 /**
  * Clase base de las pruebas de integración de los módulos de negocio.
@@ -88,5 +91,68 @@ public abstract class ApoyoIT {
     protected int eventos(String accion, String texto) {
         return jdbc.queryForObject("SELECT count(*) FROM auditoria WHERE accion = ? AND descripcion LIKE ?",
             Integer.class, accion, "%" + texto + "%");
+    }
+
+    /**
+     * Crea un producto activo de la primera categoría.
+     *
+     * @param precio   precio de venta
+     * @param fraccion si se vende en fracciones
+     * @return id del producto
+     */
+    protected Long crearProducto(String precio, boolean fraccion) {
+        Long categoria = jdbc.queryForObject("SELECT min(id) FROM categoria", Long.class);
+        return jdbc.queryForObject("INSERT INTO producto (codigo, nombre, categoria_id, unidad_medida, permite_fraccion, "
+            + "precio_venta) VALUES (?, 'Producto de prueba', ?, 'UNIDAD', ?, ?) RETURNING id", Long.class,
+            "P-" + UUID.randomUUID().toString().substring(0, 8), categoria, fraccion, new BigDecimal(precio));
+    }
+
+    /**
+     * Crea un tercero activo con cédula aleatoria.
+     *
+     * @param cliente   rol de cliente
+     * @param proveedor rol de proveedor
+     * @return id del tercero
+     */
+    protected Long crearTercero(boolean cliente, boolean proveedor) {
+        String numero = String.valueOf(ThreadLocalRandom.current().nextLong(1_000_000_000L, 9_999_999_999L));
+        return jdbc.queryForObject("INSERT INTO tercero (tipo_persona, tipo_documento, numero_documento, nombre, es_cliente, "
+            + "es_proveedor) VALUES ('NATURAL', 'CC', ?, 'Tercero de prueba', ?, ?) RETURNING id", Long.class, numero,
+            cliente, proveedor);
+    }
+
+    /**
+     * Carga existencias con un ajuste de entrada real (inventario inicial).
+     *
+     * @param admin    sesión de un ADMIN
+     * @param producto producto
+     * @param cantidad cantidad
+     * @param costo    costo unitario
+     * @throws Exception si el ajuste no responde 201
+     */
+    protected void cargarInventario(MockHttpSession admin, Long producto, String cantidad, String costo) throws Exception {
+        enviar(admin, "/api/v1/ajustes", "{\"productoId\":%d,\"tipo\":\"ENTRADA\",\"cantidad\":%s,\"costoUnitario\":\"%s\",\"motivo\":\"Inventario inicial\"}"
+            .formatted(producto, cantidad, costo)).andExpect(MockMvcResultMatchers.status().isCreated());
+    }
+
+    /**
+     * @param sesion sesión autenticada
+     * @param ruta   ruta de la API
+     * @param cuerpo JSON
+     * @return resultado del POST con CSRF
+     * @throws Exception si falla la petición
+     */
+    protected ResultActions enviar(MockHttpSession sesion, String ruta, String cuerpo) throws Exception {
+        return mvc.perform(post(ruta).with(csrf()).session(sesion).contentType(MediaType.APPLICATION_JSON).content(cuerpo));
+    }
+
+    /** @return existencias actuales del producto */
+    protected BigDecimal existenciasDe(Long producto) {
+        return jdbc.queryForObject("SELECT existencias FROM producto WHERE id = ?", BigDecimal.class, producto);
+    }
+
+    /** @return costo promedio actual del producto */
+    protected BigDecimal costoDe(Long producto) {
+        return jdbc.queryForObject("SELECT costo_promedio FROM producto WHERE id = ?", BigDecimal.class, producto);
     }
 }
