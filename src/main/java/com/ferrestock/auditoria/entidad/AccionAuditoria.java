@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.3.0
+ * Versión:                0.4.0
  */
 package com.ferrestock.auditoria.entidad;
 
@@ -35,5 +35,21 @@ public enum AccionAuditoria {
     /** Reactivación de un usuario. */
     USUARIO_ACTIVADO,
     /** Contraseña temporal asignada por el administrador. */
-    CONTRASENA_RESTABLECIDA
+    CONTRASENA_RESTABLECIDA,
+    /** Alta de categoría (RF-PRO-009). */
+    CATEGORIA_CREADA,
+    /** Cambio de nombre de categoría. */
+    CATEGORIA_ACTUALIZADA,
+    /** Activación o desactivación de categoría. */
+    CATEGORIA_ESTADO_CAMBIADO,
+    /** Alta de producto (RF-PRO-001). */
+    PRODUCTO_CREADO,
+    /** Cambio de datos descriptivos de producto (RF-PRO-005). */
+    PRODUCTO_ACTUALIZADO,
+    /** Desactivación de producto (RF-PRO-006). */
+    PRODUCTO_DESACTIVADO,
+    /** Reactivación de producto (RF-PRO-007). */
+    PRODUCTO_ACTIVADO,
+    /** Cambio de precio de venta (RF-PRE-002, RN-09). */
+    PRECIO_MODIFICADO
 }
