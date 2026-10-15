@@ -1,0 +1,9 @@
+# Nombre: .gitignore | Descripción: archivos excluidos del repositorio backend | Creación: 2026-10-14 | Actualización: 2026-10-14
+# Autores: Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero | Versión: 0.1.0
+target/
+.idea/
+*.iml
+.vscode/
+.DS_Store
+.env
+*.log
