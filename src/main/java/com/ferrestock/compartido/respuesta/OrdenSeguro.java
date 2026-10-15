@@ -39,7 +39,7 @@ public final class OrdenSeguro {
         String campo = partes[0].trim();
         String direccion = partes.length > 1 ? partes[1].trim().toLowerCase(Locale.ROOT) : "asc";
         if (partes.length > 2 || !permitidos.contains(campo) || !Set.of("asc", "desc").contains(direccion)) {
-            throw new NegocioException(CodigoError.VALIDACION, "orden");
+            throw NegocioException.enCampo(CodigoError.VALIDACION, "orden");
         }
         return Sort.by("desc".equals(direccion) ? Sort.Direction.DESC : Sort.Direction.ASC, campo);
     }
