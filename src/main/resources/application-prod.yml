@@ -1,0 +1,23 @@
+# Nombre:                 application-prod.yml
+# Descripción:            Perfil de producción: credenciales obligatorias por variables de entorno y cookies seguras.
+# Fecha de creación:      2026-10-14
+# Fecha de actualización: 2026-10-14
+# Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
+# Versión:                0.1.0
+
+spring:
+  datasource:
+    url: ${FS_DB_URL}
+    username: ${FS_DB_USUARIO}
+    password: ${FS_DB_CLAVE}
+
+server:
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      cookie:
+        secure: true
+
+ferrestock:
+  seguridad:
+    swagger-publico: false

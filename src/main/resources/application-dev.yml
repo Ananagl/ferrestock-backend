@@ -1,0 +1,20 @@
+# Nombre:                 application-dev.yml
+# Descripción:            Perfil de desarrollo: PostgreSQL local, Swagger público y logs detallados.
+# Fecha de creación:      2026-10-14
+# Fecha de actualización: 2026-10-14
+# Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
+# Versión:                0.1.0
+
+spring:
+  datasource:
+    url: ${FS_DB_URL:jdbc:postgresql://localhost:5432/ferrestock}
+    username: ${FS_DB_USUARIO:ferrestock_app}
+    password: ${FS_DB_CLAVE:}
+
+ferrestock:
+  seguridad:
+    swagger-publico: true
+
+logging:
+  level:
+    com.ferrestock: DEBUG
