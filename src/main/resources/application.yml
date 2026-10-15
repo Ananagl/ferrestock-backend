@@ -1,9 +1,9 @@
 # Nombre:                 application.yml
 # Descripción:            Configuración común a todos los perfiles: JPA en modo validación, sesión, i18n, Actuator y OpenAPI.
 # Fecha de creación:      2026-10-14
-# Fecha de actualización: 2026-10-14
+# Fecha de actualización: 2026-10-15
 # Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
-# Versión:                0.1.0
+# Versión:                0.2.0
 
 spring:
   application:
@@ -58,3 +58,8 @@ springdoc:
 ferrestock:
   seguridad:
     swagger-publico: false
+    intentos-maximos: 5          # RF-AUT-008 (propuesta aprobada)
+    minutos-bloqueo: 15
+    recuerdame-dias: 7           # RNF-SEG-04
+    recuerdame-clave: ${FS_RECUERDAME_CLAVE:}
+    cookies-seguras: false
