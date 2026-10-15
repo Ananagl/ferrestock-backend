@@ -4,7 +4,7 @@
  * Fecha de creación:      2026-10-15
  * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.2.0
+ * Versión:                0.3.0
  */
 package com.ferrestock.compartido.error;
 
@@ -41,6 +41,10 @@ public enum CodigoError {
     CONTRASENA_CONTIENE_USUARIO(HttpStatus.BAD_REQUEST),
     /** Recurso inexistente. */
     NO_ENCONTRADO(HttpStatus.NOT_FOUND),
+    /** Ya existe un registro con ese valor único. */
+    DUPLICADO(HttpStatus.CONFLICT),
+    /** Un administrador no puede desactivarse, cambiarse el rol ni restablecerse la contraseña a sí mismo. */
+    OPERACION_SOBRE_SI_MISMO(HttpStatus.CONFLICT),
     /** Error inesperado del servidor. */
     ERROR_INTERNO(HttpStatus.INTERNAL_SERVER_ERROR);
 
