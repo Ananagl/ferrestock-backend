@@ -3,16 +3,15 @@
  * Descripción:            Pruebas de integración de la base técnica: arranque del contexto, endpoint de salud,
  *                         rechazo de peticiones sin sesión, cookie CSRF y aplicación correcta de los scripts SQL.
  * Fecha de creación:      2026-10-14
- * Fecha de actualización: 2026-10-14
+ * Fecha de actualización: 2026-10-15
  * Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
- * Versión:                0.1.0
+ * Versión:                0.7.0
  */
 package com.ferrestock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -24,13 +23,19 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
  * Verificación de la Fase 3 contra PostgreSQL real.
+ * <p>
+ * Usa un contexto propio: el post-procesador {@code csrf()} de spring-security-test, que usan las demás pruebas de
+ * integración, reemplaza para siempre el repositorio CSRF del contexto compartido por uno basado en la sesión. Si
+ * esta clase corriera después en ese contexto, la cookie {@code XSRF-TOKEN} real no se probaría.
  */
 @SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(PostgresDePrueba.class)
@@ -72,7 +77,7 @@ class BaseTecnicaIT {
     void openApiProtegidaEnPerfilTest() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
             .andExpect(status().isUnauthorized())
-            .andExpect(content().string(""));
+            .andExpect(jsonPath("$.codigo").value("NO_AUTENTICADO"));
     }
 
     @Test

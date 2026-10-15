@@ -1,9 +1,9 @@
 # Nombre:                 application.yml
 # Descripción:            Configuración común a todos los perfiles: JPA en modo validación, sesión, i18n, Actuator y OpenAPI.
 # Fecha de creación:      2026-10-14
-# Fecha de actualización: 2026-10-14
+# Fecha de actualización: 2026-10-15
 # Autores:                Ana Sofía Nagles García, María Mercedes Rincón Valencia, Juan David Camacho Tapiero
-# Versión:                0.1.0
+# Versión:                0.2.0
 
 spring:
   application:
@@ -56,5 +56,22 @@ springdoc:
   paths-to-match: /api/**
 
 ferrestock:
+  taiga:                         # reporte de errores recurrentes (RF-MON-006); vacío = desactivado
+    url: ${FS_TAIGA_URL:https://api.taiga.io}
+    usuario: ${TAIGA_USUARIO:}
+    clave: ${TAIGA_CLAVE:}
+    proyecto-id: ${TAIGA_PROYECTO_ID:1811096}
+  monitoreo:
+    umbral-recurrencia: 5
+    ventana-minutos: 10
+  negocio:                       # encabezado de los comprobantes (RF-DOC-002)
+    nombre: ${FS_NEGOCIO_NOMBRE:Ferretería FerreStock}
+    nit: ${FS_NEGOCIO_NIT:900123456-7}
+    direccion: ${FS_NEGOCIO_DIRECCION:Calle 10 # 20-30, Bogotá}
   seguridad:
     swagger-publico: false
+    intentos-maximos: 5          # RF-AUT-008 (propuesta aprobada)
+    minutos-bloqueo: 15
+    recuerdame-dias: 7           # RNF-SEG-04
+    recuerdame-clave: ${FS_RECUERDAME_CLAVE:}
+    cookies-seguras: false
