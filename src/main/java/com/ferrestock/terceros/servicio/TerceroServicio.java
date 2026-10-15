@@ -87,18 +87,18 @@ public class TerceroServicio {
     public TerceroResponse crear(TerceroCrearRequest solicitud) {
         exigirAlgunRol(solicitud.esCliente(), solicitud.esProveedor());
         if (solicitud.tipoPersona() == TipoPersona.JURIDICA && solicitud.tipoDocumento() != TipoDocumento.NIT) {
-            throw new NegocioException(CodigoError.PERSONA_DOCUMENTO_INCOMPATIBLE, "tipoDocumento");
+            throw NegocioException.enCampo(CodigoError.PERSONA_DOCUMENTO_INCOMPATIBLE, "tipoDocumento");
         }
         String digito = null;
         if (solicitud.tipoDocumento() == TipoDocumento.NIT) {
             if (!ValidadorNit.esValido(solicitud.numeroDocumento(), solicitud.digitoVerificacion())) {
-                throw new NegocioException(CodigoError.DIGITO_VERIFICACION_INVALIDO, "digitoVerificacion");
+                throw NegocioException.enCampo(CodigoError.DIGITO_VERIFICACION_INVALIDO, "digitoVerificacion");
             }
             digito = solicitud.digitoVerificacion();
         }
         terceros.findByTipoDocumentoAndNumeroDocumento(solicitud.tipoDocumento(), solicitud.numeroDocumento())
             .ifPresent(existente -> {
-                throw new NegocioException(CodigoError.DUPLICADO, "numeroDocumento");
+                throw NegocioException.enCampo(CodigoError.DUPLICADO, "numeroDocumento");
             });
         Long actor = actorId();
         Tercero tercero = terceros.saveAndFlush(Tercero.builder()
@@ -170,7 +170,7 @@ public class TerceroServicio {
 
     private static void exigirAlgunRol(boolean esCliente, boolean esProveedor) {
         if (!esCliente && !esProveedor) {
-            throw new NegocioException(CodigoError.ROL_TERCERO_REQUERIDO, "esCliente");
+            throw NegocioException.enCampo(CodigoError.ROL_TERCERO_REQUERIDO, "esCliente");
         }
     }
 
